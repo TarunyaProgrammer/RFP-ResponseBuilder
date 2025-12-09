@@ -73,25 +73,80 @@ async function extractLineItems(rawText) {
 }
 
 async function chooseBestSku(lineItem, candidateSkus) {
-  const systemPrompt = `You are a sales engineer matching RFP line items to a product catalog.
-    Task: Find the best matching SKU for the requested line item from the provided candidates.
-    
-    Return strict JSON:
-    {
-        "chosenSkuCode": string | null, // The skuCode of the best match, or null if none fit well
-        "confidence": number, // 0 to 100
-        "rationale": string // Brief reason for the match
-    }
-    Return ONLY VALID JSON.`;
+  const systemPrompt = `You match FMCG RFP line items to internal SKUs.
+
+You will be given:
+- ONE RFP line item (description, quantity, unit, notes)
+- A SMALL LIST of candidate SKUs from the supplier's catalog
+
+Each candidate SKU has fields like:
+- id
+- skuCode
+- name
+- description
+- packSize
+- category
+
+YOUR JOB:
+- Pick the SINGLE best matching SKU, if one clearly fits.
+- Or return null if none are a reasonable match.
+
+MATCHING RULES (VERY IMPORTANT):
+1. PACK SIZE is the strongest signal.
+   - 500ml must match 500ml.
+   - 1L must match 1L.
+   - If pack size differs, confidence must be <= 40.
+
+2. PRODUCT TYPE must match.
+   - Lemon drink ↔ lemon beverage, not orange or cola.
+   - Potato chips ↔ chips, not water or beverages.
+   - Water ↔ packaged drinking water, not soft drinks.
+
+3. CONTAINER TYPE should be considered.
+   - "PET bottle" ↔ PET SKUs, not cans.
+   - "can" ↔ can SKUs, not PET bottles.
+   - If container type differs, reduce confidence.
+
+4. CATEGORY is a secondary check.
+   - Beverages vs Snacks vs Water, etc.
+
+5. If multiple SKUs could match, choose the most specific one
+   that matches BOTH pack size AND product type.
+
+OUTPUT FORMAT (STRICT):
+- Return ONLY a JSON object, no extra explanation, no markdown.
+- Schema:
+
+{
+  "chosenSkuCode": "string or null",
+  "confidence": number,
+  "rationale": "string"
+}
+
+Where:
+- chosenSkuCode: MUST be one of the candidate skuCode values, or null.
+- confidence: integer 0–100.
+- rationale: 1–3 short sentences explaining the choice.
+
+IF NO GOOD MATCH:
+- If NONE of the candidate SKUs are reasonable (wrong category, wrong pack size, wrong product), then:
+  - "chosenSkuCode": null
+  - "confidence": 20 or less
+  - rationale: explain briefly why nothing fits.
+
+DO NOT:
+- Invent new SKU codes.
+- Modify SKU codes.
+- Use any skuCode that is not in the provided candidate list.`;
 
   const userPrompt = `
-    Line Item Requested:
-    Description: ${lineItem.description}
-    Notes: ${lineItem.notes}
+Line item:
+${JSON.stringify(lineItem, null, 2)}
 
-    Candidate SKUs:
-    ${JSON.stringify(candidateSkus, null, 2)}
-    `;
+Candidate SKUs:
+${JSON.stringify(candidateSkus, null, 2)}
+
+Pick the best match following the rules.`;
 
   const content = await callGroqChat({ systemPrompt, userPrompt });
   const result = parseJson(content);
@@ -105,52 +160,118 @@ async function chooseBestSku(lineItem, candidateSkus) {
 }
 
 async function generateProposalHtml(rfp, lineItems, marginPercent) {
-  const systemPrompt = `You are a professional proposal writer.
-    Generate a simple, clean HTML fragment (not a full document, just the inner HTML) for a business proposal.
-    Do not use <html>, <head>, or <body> tags. Start with <div> or similar.
-    
-    Structure:
-    1. Header with Title "Proposal for [Buyer Name]"
-    2. Executive Summary (based on RFP summary)
-    3. Pricing Table (HTML Table with columns: Description, SKU, Qty, Unit, Price, Total)
-       - Calculate prices based on the provided line items.
-    4. Terms & Conditions (Delivery, Validity)
-    5. Closing`;
+  const systemPrompt = `You generate a professional but concise SALES PROPOSAL in HTML.
 
-  // Prepare data for prompt
-  const proposalData = {
-    buyerName: rfp.buyerName || "Client",
+YOU ARE NOT ALLOWED TO INVENT:
+- New SKUs
+- New prices
+- New quantities
+- New totals
+- Placeholder text like "Custom Quote" or "Example"
+
+You will be given:
+- RFP metadata (buyerName, deadline, summary, keyRequirements)
+- A list of line items that ALREADY contain:
+  - description
+  - quantity
+  - unit
+  - matched SKU information (skuCode, skuName)
+  - unitPrice
+  - totalPrice
+
+All pricing has ALREADY been calculated by the system.
+You must use these numeric values EXACTLY as provided.
+Do NOT recalculate or adjust them.
+Do NOT say "prices are indicative" or "example".
+Do NOT add any notes about how prices were calculated.
+
+OUTPUT FORMAT:
+- Return a SINGLE HTML FRAGMENT (string), with:
+  - NO <html>, <head>, or <body> tags.
+  - Just the inner content.
+
+STRUCTURE OF THE HTML:
+1. Title
+   - <h2>Proposal for [buyerName]</h2>
+
+2. Short intro / cover letter (2 short paragraphs)
+   - Mention the RFP summary briefly.
+   - Mention that you can meet the requirements.
+
+3. Key information list
+   - A simple <ul> with 3–5 bullet points, e.g.:
+     - Contract duration
+     - Coverage (pan-India distribution)
+     - Quality & compliance (FSSAI, BIS, etc.)
+
+4. Pricing table
+   - A single <table> with header row:
+     - Description
+     - SKU Code
+     - SKU Name
+     - Quantity
+     - Unit
+     - Unit Price
+     - Total Price
+   - For each line item, use EXACT fields from input:
+     - description
+     - skuCode
+     - skuName
+     - quantity
+     - unit
+     - unitPrice
+     - totalPrice
+   - DO NOT change currencies or numbers.
+   - DO NOT introduce "Custom Quote".
+   - If a line item has null price, show "-" for that cell.
+
+5. Delivery & Terms section
+   - A <h3>Delivery & Terms</h3>
+   - 3–5 bullet points (<ul><li>...</li></ul>) about:
+     - Delivery timelines (e.g., within X days of PO)
+     - Minimum shelf life compliance
+     - Price validity
+     - Payment terms (generic)
+
+6. Closing paragraph
+   - 1 short <p> thanking the buyer and inviting further discussion.
+
+STYLE:
+- Use simple, clean HTML only.
+- No inline CSS, no scripts.
+- Do NOT include explanations like "Note: these prices are examples" or "calculated with margin".
+- The output should be ready to drop into a web page as-is.
+
+AGAIN:
+- Use ONLY the data given in the input.
+- Do NOT invent any values, SKUs, or prices.`;
+
+  // Use enriched items directly (they already have calculated prices)
+  const calculatedItems = lineItems;
+
+  const userPrompt = `
+Here is the structured data you must use to generate the proposal.
+
+RFP metadata:
+${JSON.stringify(
+  {
+    buyerName: rfp.buyerName,
+    deadline: rfp.deadline,
     summary: rfp.summary,
-    margin: marginPercent,
-    items: lineItems.map((item) => ({
-      desc: item.description,
-      sku: item.matchedSku ? item.matchedSku.skuCode : "N/A",
-      skuName: item.matchedSku ? item.matchedSku.name : "Custom Quote",
-      qty: item.quantity || 1,
-      unit: item.unit || "each",
-      unitPrice: item.matchedSku
-        ? (item.matchedSku.baseCost * (1 + marginPercent / 100)).toFixed(2)
-        : "TBD",
-      total: item.matchedSku
-        ? (
-            item.matchedSku.baseCost *
-            (1 + marginPercent / 100) *
-            (item.quantity || 1)
-          ).toFixed(2)
-        : "TBD",
-    })),
-  };
+    keyRequirements: rfp.keyRequirements,
+  },
+  null,
+  2
+)}
 
-  const userPrompt = `Data for proposal:\n${JSON.stringify(
-    proposalData,
-    null,
-    2
-  )}`;
+Line items (each object already includes all pricing & SKU info):
+${JSON.stringify(calculatedItems, null, 2)}
+
+Generate the HTML fragment according to the instructions.`;
 
   const content = await callGroqChat({ systemPrompt, userPrompt });
-  // AI might return markdown code block, strip it if needed, but HTML is usually fine.
-  // We already have a parseJson, but this returns HTML string.
-  // Just simple cleanup if it puts it in quotes or markdown.
+
+  // Cleanup markdown
   let html = content.trim();
   if (html.startsWith("```html"))
     html = html.replace(/^```html/, "").replace(/```$/, "");

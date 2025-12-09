@@ -157,7 +157,55 @@ app.post("/api/rfp/:id/generate", async (req, res) => {
     const rfp = rfps.find((r) => r.id === req.params.id);
     if (!rfp) return res.status(404).json({ error: "RFP not found" });
 
-    const html = await generateProposalHtml(rfp, rfp.lineItems, marginPercent);
+    // ENRICH DATA HERE (Prevent AI Hallucination)
+    const enrichedLineItems = rfp.lineItems.map((li) => {
+      const sku = skus.find((s) => s.id === li.matchedSkuId);
+
+      let finalUnitPrice = null;
+      let finalTotalPrice = null;
+      let skuCode = null;
+      let skuName = null;
+
+      if (sku) {
+        skuCode = sku.skuCode;
+        skuName = sku.name;
+
+        const cost = sku.baseCost;
+        const price = cost * (1 + marginPercent / 100);
+        const qty = li.quantity || 1;
+
+        finalUnitPrice = price.toFixed(2);
+        finalTotalPrice = (price * qty).toFixed(2);
+      } else {
+        // Explicitly null if no match, so AI sees it's missing
+        finalUnitPrice = null;
+        finalTotalPrice = null;
+      }
+
+      return {
+        description: li.description,
+        quantity: li.quantity,
+        unit: li.unit,
+        notes: li.notes,
+        skuCode: skuCode,
+        skuName: skuName,
+        unitPrice: finalUnitPrice,
+        totalPrice: finalTotalPrice,
+      };
+    });
+
+    const html = await generateProposalHtml(
+      {
+        id: rfp.id,
+        name: rfp.name,
+        buyerName: rfp.buyerName,
+        deadline: rfp.deadline,
+        summary: rfp.summary,
+        keyRequirements: rfp.keyRequirements,
+      },
+      enrichedLineItems,
+      marginPercent
+    );
     rfp.proposalHtml = html;
 
     res.json({ html });

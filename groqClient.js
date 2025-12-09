@@ -14,7 +14,7 @@ const GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions";
 async function callGroqChat({
   systemPrompt,
   userPrompt,
-  model = "llama3-70b-8192",
+  model = "llama-3.3-70b-versatile",
 }) {
   if (!GROQ_API_KEY) {
     throw new Error("GROQ_API_KEY environment variable not set");

@@ -1,0 +1,11 @@
+skuCode,name,description,packSize,category,baseCost
+BEV_LEMON_500,Refreshing Lemon Drink 500ml PET,Lemon-flavoured carbonated soft drink,500ml,Beverages,18
+BEV_LEMON_250_Can,Lemon Drink 250ml Can,Lemon drink in aluminium can,250ml,Beverages,12
+BEV_ORANGE_500,Orange Twist 500ml PET,Orange-flavoured soft drink,500ml,Beverages,19
+BEV_ORANGE_250_Can,Orange Twist 250ml Can,Orange drink in aluminium can,250ml,Beverages,13
+BEV_COLA_1L,Cola Classic 1L PET,Cola-flavoured beverage,1L,Beverages,28
+SNACKS_POTATO_50,Potato Chips Classic 50g,Salted classic potato chips,50g,Snacks,7
+SNACKS_POTATO_100,Potato Chips Classic 100g,Salted classic potato chips,100g,Snacks,12
+SNACKS_MASALA_50,Masala Chips 50g,Spicy masala potato chips,50g,Snacks,8
+WATER_1L,Packaged Drinking Water 1L,BIS-certified packaged water,1L,Water,10
+WATER_500ML,Packaged Water 500ml,BIS-certified packaged water,500ml,Water,6

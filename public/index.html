@@ -5,77 +5,114 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RFP Velocity</title>
     <link rel="stylesheet" href="style.css" />
-    <!-- Google Fonts -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
-      rel="stylesheet"
-    />
   </head>
   <body>
-    <div class="background-blobs">
-      <div class="blob blob-1"></div>
-      <div class="blob blob-2"></div>
-    </div>
-
     <div class="container">
       <header>
         <h1>RFP Velocity</h1>
-        <p class="subtitle">Proposal Generation at Warp Speed</p>
+        <p class="subtitle">Proposal Generation Tool</p>
       </header>
 
       <main>
-        <!-- SECTION 1: CATALOG UPLOAD -->
-        <section class="glass-panel" id="section-upload">
-          <div class="step-badge">1</div>
-          <h2>Upload SKU Catalog</h2>
-          <div class="upload-area">
+        <!-- 1. Data Ingestion -->
+        <section class="section-panel">
+          <div class="section-header">
+            <h2>Catalog Data</h2>
+            <span class="badge">Step 1</span>
+          </div>
+
+          <div class="info-group">
+            <label>SKU Catalog (CSV)</label>
             <input type="file" id="skuCsvInput" accept=".csv" />
-            <div class="upload-btn-group">
-              <button id="btnUploadSku" class="btn primary">Upload CSV</button>
-            </div>
             <p id="uploadStatus" class="status-msg"></p>
           </div>
+
+          <div
+            class="action-bar"
+            style="margin-top: 0; padding-top: 0; border: none"
+          >
+            <button id="btnUploadSku" class="btn secondary">
+              Upload Catalog
+            </button>
+          </div>
         </section>
 
-        <!-- SECTION 2: RFP INPUT -->
-        <section class="glass-panel" id="section-rfp">
-          <div class="step-badge">2</div>
-          <h2>RFP Analysis</h2>
-          <textarea
-            id="rfpTextInput"
-            placeholder="Paste your RFP raw text here..."
-          ></textarea>
+        <!-- 2. RFP Analysis -->
+        <section class="section-panel">
+          <div class="section-header">
+            <h2>RFP Analysis</h2>
+            <span class="badge">Step 2</span>
+          </div>
+
+          <div class="info-group">
+            <label>RFP Raw Text</label>
+            <textarea
+              id="rfpTextInput"
+              placeholder="Paste the full text of the RFP here..."
+            ></textarea>
+          </div>
+
           <div class="action-bar">
-            <button id="btnAnalyze" class="btn primary">Analyze RFP</button>
+            <button id="btnAnalyze" class="btn primary">Analyze Text</button>
           </div>
 
-          <div id="analysisResult" class="hidden">
-            <h3>Analysis Summary</h3>
+          <!-- Analysis Results -->
+          <div
+            id="analysisResult"
+            class="hidden"
+            style="
+              margin-top: 24px;
+              padding-top: 24px;
+              border-top: 1px solid var(--border-color);
+            "
+          >
+            <h3>Key Details</h3>
             <div class="grid-2">
-              <div class="info-card">
-                <label>Buyer</label>
-                <span id="dispBuyer"></span>
+              <div class="info-group">
+                <label>Buyer Name</label>
+                <div id="dispBuyer" class="info-value">-</div>
               </div>
-              <div class="info-card">
+              <div class="info-group">
                 <label>Deadline</label>
-                <span id="dispDeadline"></span>
+                <div id="dispDeadline" class="info-value">-</div>
               </div>
-            </div>
-            <div class="info-card full-width">
-              <label>Summary</label>
-              <p id="dispSummary"></p>
+              <div class="info-group full-width">
+                <label>Executive Summary</label>
+                <div
+                  id="dispSummary"
+                  class="info-value"
+                  style="color: var(--text-secondary)"
+                ></div>
+              </div>
             </div>
           </div>
         </section>
 
-        <!-- SECTION 3: LINE ITEMS & MATCHING -->
-        <section class="glass-panel hidden" id="section-matching">
-          <div class="step-badge">3</div>
-          <h2>Line Item Matching</h2>
-          <p class="hint">Review extracted items and AI-matched SKUs.</p>
+        <!-- 3. Matching -->
+        <section id="section-matching" class="section-panel hidden">
+          <div class="section-header">
+            <h2>Line Item Matching</h2>
+            <span class="badge">Step 3</span>
+          </div>
+          <p class="hint">Review extracted items and matched SKUs.</p>
 
-          <div class="line-items-container" id="lineItemsList">
-            <!-- Items injected here -->
+          <div
+            class="line-items-wrapper"
+            style="
+              border: 1px solid var(--border-color);
+              border-radius: var(--radius-md);
+              overflow: hidden;
+            "
+          >
+            <div class="line-items-header">
+              <div>Description</div>
+              <div>Qty</div>
+              <div>Unit</div>
+              <div>Matched SKU</div>
+            </div>
+            <div id="lineItemsList">
+              <!-- Rows injected here -->
+            </div>
           </div>
 
           <div class="action-bar">
@@ -83,33 +120,51 @@
           </div>
         </section>
 
-        <!-- SECTION 4: GENERATION -->
-        <section class="glass-panel hidden" id="section-generate">
-          <div class="step-badge">4</div>
-          <h2>Generate Proposal</h2>
-          <div class="controls">
-            <label
-              >Margin %:
-              <input
-                type="number"
-                id="inputMargin"
-                value="20"
-                style="width: 60px"
-            /></label>
-            <button id="btnGenerate" class="btn primary">Generate HTML</button>
+        <!-- 4. Generation -->
+        <section id="section-generate" class="section-panel hidden">
+          <div class="section-header">
+            <h2>Proposal Generation</h2>
+            <span class="badge">Step 4</span>
           </div>
 
-          <div id="proposalPreview" class="proposal-box hidden">
-            <!-- HTML Preview -->
+          <div class="flex-center" style="margin-bottom: 16px">
+            <label style="margin: 0">Target Margin %:</label>
+            <input
+              type="number"
+              id="inputMargin"
+              value="20"
+              style="width: 80px"
+            />
           </div>
 
-          <div class="action-bar hidden" id="downloadActions">
-            <button id="btnDownload" class="btn success">Download .html</button>
+          <button id="btnGenerate" class="btn primary">
+            Generate Proposal
+          </button>
+
+          <div id="proposalContainer" class="hidden" style="margin-top: 24px">
+            <label>Preview</label>
+            <div id="proposalPreview" class="proposal-preview"></div>
+
+            <div class="action-bar">
+              <button id="btnDownload" class="btn success">
+                Download HTML
+              </button>
+            </div>
           </div>
         </section>
       </main>
     </div>
 
+    <!-- Logic -->
     <script src="app.js"></script>
+
+    <!-- Render Update Helper for New HTML Structure -->
+    <script>
+      // Override renderLineItems for new Table Layout
+      // We inject this here or update app.js.
+      // Updating app.js is cleaner, but to avoid breaking logic if we miss something,
+      // let's update app.js directly in the next step or rely on its existing logic if compatible.
+      // The previous app.js created .line-item-card divs. We need to update that function.
+    </script>
   </body>
 </html>
