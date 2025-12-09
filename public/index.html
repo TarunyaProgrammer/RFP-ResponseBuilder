@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RFP Velocity</title>
+    <link rel="stylesheet" href="style.css" />
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="background-blobs">
+      <div class="blob blob-1"></div>
+      <div class="blob blob-2"></div>
+    </div>
+
+    <div class="container">
+      <header>
+        <h1>RFP Velocity</h1>
+        <p class="subtitle">Proposal Generation at Warp Speed</p>
+      </header>
+
+      <main>
+        <!-- SECTION 1: CATALOG UPLOAD -->
+        <section class="glass-panel" id="section-upload">
+          <div class="step-badge">1</div>
+          <h2>Upload SKU Catalog</h2>
+          <div class="upload-area">
+            <input type="file" id="skuCsvInput" accept=".csv" />
+            <div class="upload-btn-group">
+              <button id="btnUploadSku" class="btn primary">Upload CSV</button>
+            </div>
+            <p id="uploadStatus" class="status-msg"></p>
+          </div>
+        </section>
+
+        <!-- SECTION 2: RFP INPUT -->
+        <section class="glass-panel" id="section-rfp">
+          <div class="step-badge">2</div>
+          <h2>RFP Analysis</h2>
+          <textarea
+            id="rfpTextInput"
+            placeholder="Paste your RFP raw text here..."
+          ></textarea>
+          <div class="action-bar">
+            <button id="btnAnalyze" class="btn primary">Analyze RFP</button>
+          </div>
+
+          <div id="analysisResult" class="hidden">
+            <h3>Analysis Summary</h3>
+            <div class="grid-2">
+              <div class="info-card">
+                <label>Buyer</label>
+                <span id="dispBuyer"></span>
+              </div>
+              <div class="info-card">
+                <label>Deadline</label>
+                <span id="dispDeadline"></span>
+              </div>
+            </div>
+            <div class="info-card full-width">
+              <label>Summary</label>
+              <p id="dispSummary"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- SECTION 3: LINE ITEMS & MATCHING -->
+        <section class="glass-panel hidden" id="section-matching">
+          <div class="step-badge">3</div>
+          <h2>Line Item Matching</h2>
+          <p class="hint">Review extracted items and AI-matched SKUs.</p>
+
+          <div class="line-items-container" id="lineItemsList">
+            <!-- Items injected here -->
+          </div>
+
+          <div class="action-bar">
+            <button id="btnMatch" class="btn secondary">Run AI Matching</button>
+          </div>
+        </section>
+
+        <!-- SECTION 4: GENERATION -->
+        <section class="glass-panel hidden" id="section-generate">
+          <div class="step-badge">4</div>
+          <h2>Generate Proposal</h2>
+          <div class="controls">
+            <label
+              >Margin %:
+              <input
+                type="number"
+                id="inputMargin"
+                value="20"
+                style="width: 60px"
+            /></label>
+            <button id="btnGenerate" class="btn primary">Generate HTML</button>
+          </div>
+
+          <div id="proposalPreview" class="proposal-box hidden">
+            <!-- HTML Preview -->
+          </div>
+
+          <div class="action-bar hidden" id="downloadActions">
+            <button id="btnDownload" class="btn success">Download .html</button>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>
