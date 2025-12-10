@@ -298,9 +298,7 @@ Raw text pasted into textarea.
 
 # 👥 Contributors
 
-- **Tarun** — AI Architecture, Backend
-- **(Add teammates)** — UI/UX, Frontend, QA
-- **Echo (ChatGPT)** — Technical guidance & architecture support
+- **Tarunya Kesharwani** — AI Architecture, Backend, UI/UX, Frontend
 
 ---
 
