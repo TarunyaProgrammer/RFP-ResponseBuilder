@@ -2,6 +2,9 @@
 let currentRfpId = null;
 let currentLineItems = [];
 
+// API Base URL - If running on port 5500 (Live Server), hit backend on 3000
+const API_BASE = window.location.port === "5500" ? "http://localhost:3000" : "";
+
 // Elements
 // Elements
 const dom = {
@@ -36,7 +39,7 @@ dom.btnAnalyze.addEventListener("click", async () => {
   dom.btnAnalyze.disabled = true;
 
   try {
-    const res = await fetch("/api/rfp/analyze", {
+    const res = await fetch(`${API_BASE}/api/rfp/analyze`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ rfpText: text }),
@@ -76,7 +79,7 @@ dom.btnMatch.addEventListener("click", async () => {
   dom.btnMatch.disabled = true;
 
   try {
-    const res = await fetch(`/api/rfp/${currentRfpId}/match`, {
+    const res = await fetch(`${API_BASE}/api/rfp/${currentRfpId}/match`, {
       method: "POST",
     });
     const data = await res.json();
@@ -106,7 +109,7 @@ dom.btnGenerate.addEventListener("click", async () => {
   dom.btnGenerate.disabled = true;
 
   try {
-    const res = await fetch(`/api/rfp/${currentRfpId}/generate`, {
+    const res = await fetch(`${API_BASE}/api/rfp/${currentRfpId}/generate`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ marginPercent: parseFloat(margin) }),
@@ -154,6 +157,76 @@ dom.btnDownload.addEventListener("click", () => {
   a.click();
   document.body.removeChild(a);
 });
+
+// 6. Download PDF
+document
+  .getElementById("btnDownloadPdf")
+  .addEventListener("click", async () => {
+    if (!currentRfpId) return;
+    const btn = document.getElementById("btnDownloadPdf");
+    const originalText = btn.textContent;
+    btn.textContent = "Downloading...";
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/rfp/${currentRfpId}/download/pdf`,
+        { method: "POST" }
+      );
+      if (!res.ok) throw new Error("PDF generation failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `proposal-${currentRfpId}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to download PDF");
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+// 7. Download DOCX
+document
+  .getElementById("btnDownloadDocx")
+  .addEventListener("click", async () => {
+    if (!currentRfpId) return;
+    const btn = document.getElementById("btnDownloadDocx");
+    const originalText = btn.textContent;
+    btn.textContent = "Downloading...";
+    btn.disabled = true;
+
+    try {
+      const res = await fetch(
+        `${API_BASE}/api/rfp/${currentRfpId}/download/docx`,
+        { method: "POST" }
+      );
+      if (!res.ok) throw new Error("DOCX generation failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `proposal-${currentRfpId}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error(e);
+      alert("Failed to download DOCX");
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
 
 // Helper: Render items (Table Layout)
 function renderLineItems(items) {

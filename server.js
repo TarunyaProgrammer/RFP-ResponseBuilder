@@ -9,12 +9,27 @@ const {
   chooseBestSku,
   generateProposalHtml,
 } = require("./ai");
+const puppeteer = require("puppeteer");
+const HTMLtoDOCX = require("html-to-docx");
 
 const app = express();
 const upload = multer({ dest: "uploads/" });
 
 app.use(express.static("public"));
 app.use(express.json());
+
+// -- MANUAL CORS MIDDLEWARE --
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*"); // Allow any origin
+  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+
+  // Handle preflight
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // --- IN-MEMORY DATA ---
 let skus = []; // { id, skuCode, name, description, category, baseCost }
@@ -96,6 +111,38 @@ app.post("/api/rfp/analyze", async (req, res) => {
   }
 });
 
+// --- HELPERS ---
+
+function tokenize(text) {
+  return (text || "").toLowerCase().match(/[a-z0-9]+/g) || [];
+}
+
+function getSkuCandidatesForText(text, limit = 5) {
+  const tokens = new Set(tokenize(text));
+  if (tokens.size === 0) return skus.slice(0, limit);
+
+  const scored = skus.map((sku) => {
+    const skuTokens = tokenize(
+      `${sku.name} ${sku.description} ${sku.category} ${sku.packSize}`
+    );
+    let score = 0;
+    skuTokens.forEach((t) => {
+      if (tokens.has(t)) score++;
+    });
+    return { sku, score };
+  });
+
+  // Sort by score desc
+  scored.sort((a, b) => b.score - a.score);
+
+  // Filter those with at least 1 match, or fallback to generic top list if strictness is too high
+  // But for now, let's return top scorers even if score is low, to valid "no match"
+  // Better: only return score > 0. If none, return empty (so AI says "no match") or return generic?
+  // AI needs candidates to "reject". If we send nothing, it can't choose.
+  // So let's send top `limit` regardless, but useful ones first.
+  return scored.slice(0, limit).map((s) => s.sku);
+}
+
 // 3. Match SKUs for an RFP
 app.post("/api/rfp/:id/match", async (req, res) => {
   try {
@@ -103,46 +150,37 @@ app.post("/api/rfp/:id/match", async (req, res) => {
     const rfp = rfps.find((r) => r.id === rfpId);
     if (!rfp) return res.status(404).json({ error: "RFP not found" });
 
-    // For each line item, find best SKU
-    // In a real app, we'd use vector search. Here, we'll brute force or just pass top 10 SKUs?
-    // Passing all SKUs to context might be too big.
-    // Hackathon optimize: Just pass first 20 SKUs or filter by simple name match first.
-    // Let's optimize: Filter SKUs that share words?
-    // SIMPLIFICATION: Pass top 5 SKUs that have any word overlap in name/desc.
-    // If no match, pass a random subset to check validatiy?
-    // Actually, let's just send the first 10-15 SKUs to keep it simple and cheap for now,
-    // OR better: do a crude keyword search.
-
+    // Parallel matching
     const tasks = rfp.lineItems.map(async (item) => {
-      // Crude keyword filter
-      const keywords = (item.description || "").toLowerCase().split(" ");
-      let candidates = skus
-        .filter((s) => {
-          const text = (s.name + " " + s.description).toLowerCase();
-          return keywords.some((k) => k.length > 3 && text.includes(k));
-        })
-        .slice(0, 5);
+      // 1. Get Candidates
+      const candidates = getSkuCandidatesForText(item.description, 5);
 
-      if (candidates.length === 0) {
-        // Fallback: just take first 5
-        candidates = skus.slice(0, 5);
-      }
-
+      // 2. Call AI
       const matchResult = await chooseBestSku(item, candidates);
 
+      // 3. Update Item
       if (matchResult.chosenSkuCode) {
         const sku = skus.find((s) => s.skuCode === matchResult.chosenSkuCode);
         if (sku) {
           item.matchedSkuId = sku.id;
-          item.matchedSku = sku; // Store ref for easy access
+          item.matchedSku = sku; // Persist for frontend
           item.matchConfidence = matchResult.confidence;
           item.rationale = matchResult.rationale;
+        } else {
+          // AI picked a code that doesn't exist (shouldn't happen with strict prompt)
+          item.matchedSkuId = null;
+          item.matchedSku = null;
         }
+      } else {
+        item.matchedSkuId = null;
+        item.matchedSku = null;
       }
       return item;
     });
 
     await Promise.all(tasks);
+
+    // Return the updated RFP (or just line items)
     res.json(rfp);
   } catch (error) {
     console.error(error);
@@ -212,6 +250,111 @@ app.post("/api/rfp/:id/generate", async (req, res) => {
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Generation failed" });
+  }
+});
+
+// 5. Download PDF
+app.post("/api/rfp/:id/download/pdf", async (req, res) => {
+  try {
+    const rfp = rfps.find((r) => r.id === req.params.id);
+    if (!rfp || !rfp.proposalHtml) {
+      console.error(
+        "PDF Download: RFP not found or no HTML for ID:",
+        req.params.id
+      );
+      return res.status(404).json({ error: "Proposal not found" });
+    }
+
+    console.log(
+      `Generating PDF for RFP ${rfp.id}. HTML length: ${rfp.proposalHtml.length}`
+    );
+
+    // Wrap in standard HTML for better rendering
+    const fullHtml = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="UTF-8">
+        <style>
+          body { font-family: Arial, sans-serif; margin: 40px; }
+          table { width: 100%; border-collapse: collapse; }
+          th, td { border: 1px solid #ddd; padding: 8px; }
+          th { background-color: #f4f4f4; text-align: left; }
+        </style>
+      </head>
+      <body>
+        ${rfp.proposalHtml}
+      </body>
+      </html>
+    `;
+
+    const browser = await puppeteer.launch({
+      headless: "new",
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+    const page = await browser.newPage();
+    await page.setContent(fullHtml, { waitUntil: "networkidle0" });
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      margin: { top: "20px", bottom: "20px" },
+    });
+    await browser.close();
+
+    console.log(`PDF Generated. Size: ${pdfBuffer.length} bytes`);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=proposal-${rfp.id}.pdf`
+    );
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error("PDF Generation Error:", error);
+    res.status(500).json({ error: "PDF generation failed" });
+  }
+});
+
+// 6. Download DOCX
+app.post("/api/rfp/:id/download/docx", async (req, res) => {
+  try {
+    const rfp = rfps.find((r) => r.id === req.params.id);
+    if (!rfp || !rfp.proposalHtml) {
+      console.error(
+        "DOCX Download: RFP not found or no HTML for ID:",
+        req.params.id
+      );
+      return res.status(404).json({ error: "Proposal not found" });
+    }
+
+    console.log(
+      `Generating DOCX for RFP ${rfp.id}. HTML length: ${rfp.proposalHtml.length}`
+    );
+
+    // Wrap in standard HTML structure for DOCX
+    const fullHtml = `<!DOCTYPE html><html><head><meta charset="UTF-8"></head><body>${rfp.proposalHtml}</body></html>`;
+
+    // Generate DOCX Buffer (Node.js compatible)
+    const docxBuffer = await HTMLtoDOCX(fullHtml, null, {
+      table: { row: { cantSplit: true } },
+      footer: true,
+      pageNumber: true,
+    });
+
+    console.log(`DOCX Generated. Size: ${docxBuffer.length} bytes`);
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename=proposal-${rfp.id}.docx`
+    );
+    res.send(docxBuffer);
+  } catch (error) {
+    console.error("DOCX Generation Error:", error);
+    res.status(500).json({ error: "DOCX generation failed" });
   }
 });
 

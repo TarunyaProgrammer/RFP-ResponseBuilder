@@ -160,114 +160,139 @@ Pick the best match following the rules.`;
 }
 
 async function generateProposalHtml(rfp, lineItems, marginPercent) {
-  const systemPrompt = `You generate a professional but concise SALES PROPOSAL in HTML.
+  const systemPrompt = `You are an expert corporate proposal writer and document formatter. 
+Generate a beautifully structured, industry-standard proposal in clean HTML that will later be converted to PDF and DOCX.
 
-YOU ARE NOT ALLOWED TO INVENT:
-- New SKUs
-- New prices
-- New quantities
-- New totals
-- Placeholder text like "Custom Quote" or "Example"
+STRICT RULES:
+- DO NOT invent SKU data, quantities, prices, totals, or product descriptions.
+- USE EXACT DATA passed in the lineItems input.
+- DO NOT include placeholder text such as “Custom Quote” or “Example.”
+- DO NOT add commentary or disclaimers.
+- DO NOT wrap output in <html> or <body>.
+- KEEP THE DESIGN CLEAN, CORPORATE, AND PROFESSIONAL.
 
-You will be given:
-- RFP metadata (buyerName, deadline, summary, keyRequirements)
-- A list of line items that ALREADY contain:
-  - description
-  - quantity
-  - unit
-  - matched SKU information (skuCode, skuName)
-  - unitPrice
-  - totalPrice
+FORMATTING REQUIREMENTS:
+- Use a single clean, readable font such as system-ui, Arial, or Inter.
+- Use consistent spacing (16–24px margins).
+- Use bold section headings with spacing above and below.
+- Use horizontal dividers (<hr>) between major sections.
+- Tables must be clean, bordered, and aligned.
+- Price and numeric values must be right-aligned.
+- Table headers must be bold and shaded (#f4f4f4).
+- Keep everything A4-ready (max width 800px).
 
-All pricing has ALREADY been calculated by the system.
-You must use these numeric values EXACTLY as provided.
-Do NOT recalculate or adjust them.
-Do NOT say "prices are indicative" or "example".
-Do NOT add any notes about how prices were calculated.
+STRUCTURE:
 
-OUTPUT FORMAT:
-- Return a SINGLE HTML FRAGMENT (string), with:
-  - NO <html>, <head>, or <body> tags.
-  - Just the inner content.
+1. CENTERED TITLE BLOCK
+   - Proposal for [buyerName]
+   - Small subtitle with RFP Summary
 
-STRUCTURE OF THE HTML:
-1. Title
-   - <h2>Proposal for [buyerName]</h2>
+2. EXECUTIVE SUMMARY
+   - 1–2 concise paragraphs summarizing the response
+   - Highlight capability, compliance, quality, delivery
 
-2. Short intro / cover letter (2 short paragraphs)
-   - Mention the RFP summary briefly.
-   - Mention that you can meet the requirements.
+3. KEY VALUE POINTS (bullet list)
+   - 4–6 strong bullets about quality, compliance, reliability
 
-3. Key information list
-   - A simple <ul> with 3–5 bullet points, e.g.:
-     - Contract duration
-     - Coverage (pan-India distribution)
-     - Quality & compliance (FSSAI, BIS, etc.)
+4. DETAILED LINE ITEM TABLE
+   Columns:
+   - Description
+   - SKU Code
+   - SKU Name
+   - Quantity
+   - Unit
+   - Unit Price
+   - Total Price
 
-4. Pricing table
-   - A single <table> with header row:
-     - Description
-     - SKU Code
-     - SKU Name
-     - Quantity
-     - Unit
-     - Unit Price
-     - Total Price
-   - For each line item, use EXACT fields from input:
-     - description
-     - skuCode
-     - skuName
-     - quantity
-     - unit
-     - unitPrice
-     - totalPrice
-   - DO NOT change currencies or numbers.
-   - DO NOT introduce "Custom Quote".
-   - If a line item has null price, show "-" for that cell.
+   Requirements:
+   - Use <table>, <thead>, <tbody>
+   - Use borders: 1px solid #ddd
+   - Header background: #f4f4f4
+   - Numeric values right-aligned
+   - Show “-” if a value is missing
 
-5. Delivery & Terms section
-   - A <h3>Delivery & Terms</h3>
-   - 3–5 bullet points (<ul><li>...</li></ul>) about:
-     - Delivery timelines (e.g., within X days of PO)
-     - Minimum shelf life compliance
-     - Price validity
-     - Payment terms (generic)
+5. TERMS & CONDITIONS
+   - Delivery timelines
+   - Shelf-life requirements
+   - Payment terms
+   - Contract validity
 
-6. Closing paragraph
-   - 1 short <p> thanking the buyer and inviting further discussion.
+6. CLOSING PARAGRAPH
+   - Professional, warm closing note
+   - Invitation to contact for clarification
 
-STYLE:
-- Use simple, clean HTML only.
-- No inline CSS, no scripts.
-- Do NOT include explanations like "Note: these prices are examples" or "calculated with margin".
-- The output should be ready to drop into a web page as-is.
+OUTPUT:
+Return ONLY the HTML fragment for the body content, beautifully formatted and ready for PDF/DOCX generation.
 
-AGAIN:
-- Use ONLY the data given in the input.
-- Do NOT invent any values, SKUs, or prices.`;
+IMPORTANT HTML TEMPLATE:
+<div style="font-family: system-ui, Arial; max-width: 800px; margin: 0 auto; padding: 20px;">
+
+  <h1 style="text-align:center; margin-bottom: 4px;">Proposal for {{buyerName}}</h1>
+  <p style="text-align:center; font-size:14px; color:#555;">RFP Response – Automated by RFP Velocity</p>
+
+  <hr style="margin: 24px 0;">
+
+  <h2>Executive Summary</h2>
+  <p style="line-height:1.6;">[Insert Executive Summary Here]</p>
+
+  <h2>Key Highlights</h2>
+  <ul>
+    [Insert Key Highlights Here]
+  </ul>
+
+  <h2>Commercial Breakdown</h2>
+
+  <table style="width:100%; border-collapse: collapse; margin-top:16px;">
+    <thead>
+      <tr style="background:#f4f4f4;">
+        <th style="border:1px solid #ddd; padding:8px;">Description</th>
+        <th style="border:1px solid #ddd; padding:8px;">SKU Code</th>
+        <th style="border:1px solid #ddd; padding:8px;">SKU Name</th>
+        <th style="border:1px solid #ddd; padding:8px; text-align:right;">Qty</th>
+        <th style="border:1px solid #ddd; padding:8px;">Unit</th>
+        <th style="border:1px solid #ddd; padding:8px; text-align:right;">Unit Price</th>
+        <th style="border:1px solid #ddd; padding:8px; text-align:right;">Total Price</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{lineItems}}
+    </tbody>
+  </table>
+
+  <hr style="margin: 24px 0;">
+
+  <h2>Delivery & Terms</h2>
+  <ul>
+    [Insert specific delivery and terms]
+  </ul>
+
+  <h2>Closing Note</h2>
+  <p>[Insert Closing Note]</p>
+
+</div>`;
 
   // Use enriched items directly (they already have calculated prices)
   const calculatedItems = lineItems;
 
   const userPrompt = `
-Here is the structured data you must use to generate the proposal.
+Here is the data:
 
-RFP metadata:
+RFP Metadata:
 ${JSON.stringify(
   {
     buyerName: rfp.buyerName,
-    deadline: rfp.deadline,
     summary: rfp.summary,
-    keyRequirements: rfp.keyRequirements,
+    deadline: rfp.deadline,
+    requirements: rfp.keyRequirements,
   },
   null,
   2
 )}
 
-Line items (each object already includes all pricing & SKU info):
+Line Items:
 ${JSON.stringify(calculatedItems, null, 2)}
 
-Generate the HTML fragment according to the instructions.`;
+Generate the HTML proposal now.`;
 
   const content = await callGroqChat({ systemPrompt, userPrompt });
 

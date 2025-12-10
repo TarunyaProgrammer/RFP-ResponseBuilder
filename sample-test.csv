@@ -1,11 +1,13 @@
 skuCode,name,description,packSize,category,baseCost
-BEV_LEMON_500,Refreshing Lemon Drink 500ml PET,Lemon-flavoured carbonated soft drink,500ml,Beverages,18
-BEV_LEMON_250_Can,Lemon Drink 250ml Can,Lemon drink in aluminium can,250ml,Beverages,12
-BEV_ORANGE_500,Orange Twist 500ml PET,Orange-flavoured soft drink,500ml,Beverages,19
-BEV_ORANGE_250_Can,Orange Twist 250ml Can,Orange drink in aluminium can,250ml,Beverages,13
-BEV_COLA_1L,Cola Classic 1L PET,Cola-flavoured beverage,1L,Beverages,28
-SNACKS_POTATO_50,Potato Chips Classic 50g,Salted classic potato chips,50g,Snacks,7
-SNACKS_POTATO_100,Potato Chips Classic 100g,Salted classic potato chips,100g,Snacks,12
-SNACKS_MASALA_50,Masala Chips 50g,Spicy masala potato chips,50g,Snacks,8
-WATER_1L,Packaged Drinking Water 1L,BIS-certified packaged water,1L,Water,10
-WATER_500ML,Packaged Water 500ml,BIS-certified packaged water,500ml,Water,6
+COLA_300_CAN,Cola Classic 300ml Can,Carbonated cola drink in can,300ml,Beverages,14
+COLA_750_PET,Cola Classic 750ml PET,Carbonated cola drink PET bottle,750ml,Beverages,22
+LEMON_300_CAN,Lemon Fresh 300ml Can,Lemon-flavored soda can,300ml,Beverages,13
+LEMON_600_PET,Lemon Fresh 600ml PET,Lemon soda PET bottle,600ml,Beverages,18
+ORANGE_600_PET,Orange Pop 600ml PET,Orange-flavored soda PET bottle,600ml,Beverages,19
+JUICE_MANGO_1L,Mango Juice 1L Tetra,Mango fruit drink in 1L tetra pack,1L,Juices,32
+JUICE_GUAVA_1L,Guava Juice 1L Tetra,Guava fruit drink tetra pack,1L,Juices,30
+CHIPS_SALT_55,Classic Salted Chips 55g,Light salted potato chips,55g,Snacks,8
+CHIPS_MASALA_55,Masala Chips 55g,Spicy masala potato chips,55g,Snacks,9
+CHIPS_CHEESE_90,Cheese Burst Chips 90g,Cheesy potato chips,90g,Snacks,12
+WATER_2L,Packaged Drinking Water 2L,BIS-certified water 2L,2L,Water,16
+WATER_500ML,Packaged Water 500ml,BIS-certified water 500ml,500ml,Water,7

@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RFP Velocity</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="style.css" />
   </head>
   <body>
@@ -145,9 +151,15 @@
             <label>Preview</label>
             <div id="proposalPreview" class="proposal-preview"></div>
 
-            <div class="action-bar">
+            <div class="action-bar" style="gap: 12px; display: flex">
               <button id="btnDownload" class="btn success">
                 Download HTML
+              </button>
+              <button id="btnDownloadPdf" class="btn primary">
+                Download PDF
+              </button>
+              <button id="btnDownloadDocx" class="btn primary">
+                Download DOCX
               </button>
             </div>
           </div>
