@@ -45,8 +45,9 @@ html {
 
 body {
   font-family: var(--font-family);
-  background: url("background.jpg") no-repeat center center fixed;
-  background-size: cover;
+  /* background: url("background.jpg") no-repeat center center fixed; -- Removed for Video */
+  /* background-size: cover; */
+  background: #0f172a; /* Fallback color */
   color: var(--text-primary);
   line-height: 1.6;
   height: 100vh; /* Fixed height */
@@ -55,6 +56,19 @@ body {
   -webkit-font-smoothing: antialiased;
   display: flex;
   flex-direction: column;
+}
+
+/* Video Background */
+.bg-video {
+  position: fixed;
+  right: 0;
+  bottom: 0;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  z-index: -1;
+  object-fit: cover;
 }
 
 .container {

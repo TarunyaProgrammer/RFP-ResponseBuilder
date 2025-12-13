@@ -1,6 +1,5 @@
 const express = require("express");
 const multer = require("multer");
-const fs = require("fs");
 const csv = require("csv-parser");
 const path = require("path");
 const {
@@ -9,13 +8,15 @@ const {
   chooseBestSku,
   generateProposalHtml,
 } = require("./ai");
-const puppeteer = require("puppeteer");
+const puppeteer = require("puppeteer-core");
+const chromium = require("@sparticuz/chromium");
 const HTMLtoDOCX = require("html-to-docx");
 
 const app = express();
-const upload = multer({ dest: "uploads/" });
+// Use memory storage for Vercel (ephemeral FS)
+const upload = multer({ storage: multer.memoryStorage() });
 
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
 app.use(express.json());
 
 // -- MANUAL CORS MIDDLEWARE --
@@ -35,8 +36,14 @@ app.use((req, res, next) => {
 let skus = []; // { id, skuCode, name, description, category, baseCost }
 let rfps = []; // { id, ...data }
 
+// Explicitly serve index.html for root to avoid "Cannot GET /"
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
 // --- API ENDPOINTS ---
 
+// 1. Upload SKU CSV
 // 1. Upload SKU CSV
 app.post("/api/skus/upload-csv", upload.single("file"), (req, res) => {
   if (!req.file) {
@@ -44,7 +51,11 @@ app.post("/api/skus/upload-csv", upload.single("file"), (req, res) => {
   }
 
   const results = [];
-  fs.createReadStream(req.file.path)
+  // Stream from buffer since we are using memory storage
+  const bufferStream = new require("stream").PassThrough();
+  bufferStream.end(req.file.buffer);
+
+  bufferStream
     .pipe(csv())
     .on("data", (data) => {
       // Map CSV columns to our schema (handle loose naming)
@@ -62,14 +73,13 @@ app.post("/api/skus/upload-csv", upload.single("file"), (req, res) => {
     })
     .on("end", () => {
       skus = results;
-      // Cleanup temp file
-      fs.unlinkSync(req.file.path);
       res.json({
         message: `Successfully loaded ${skus.length} SKUs`,
         count: skus.length,
       });
     })
     .on("error", (err) => {
+      console.error(err);
       res.status(500).json({ error: "Failed to process CSV" });
     });
 });
@@ -289,8 +299,11 @@ app.post("/api/rfp/:id/download/pdf", async (req, res) => {
     `;
 
     const browser = await puppeteer.launch({
-      headless: "new",
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless,
+      ignoreHTTPSErrors: true,
     });
     const page = await browser.newPage();
     await page.setContent(fullHtml, { waitUntil: "networkidle0" });
