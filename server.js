@@ -43,6 +43,16 @@ app.get("/", (req, res) => {
 
 // --- API ENDPOINTS ---
 
+// 0. Health Check (Debug Vercel Env Vars)
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    groqConfigured: !!process.env.GROQ_API_KEY, // true if key exists
+    env: process.env.NODE_ENV || "development",
+  });
+});
+
 // 1. Upload SKU CSV
 // 1. Upload SKU CSV
 app.post("/api/skus/upload-csv", upload.single("file"), (req, res) => {
