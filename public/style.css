@@ -1,23 +1,24 @@
 :root {
-  /* Modern Palette - Deep Glassmorphism */
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.2);
-  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
-  --glass-blur: blur(20px);
+  /* Premium Dark Theme - Deep Frost */
+  --glass-bg: rgba(10, 10, 15, 0.5); /* Darker, more transparent */
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+  --glass-blur: blur(40px); /* Increased blur */
+  --glass-glow: 0 0 20px rgba(129, 140, 248, 0.15); /* Subtle glow */
 
   /* Typography */
   --font-family: "Inter", sans-serif;
   --text-primary: #ffffff;
-  --text-secondary: rgba(255, 255, 255, 0.8);
-  --text-tertiary: rgba(255, 255, 255, 0.6);
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
 
   /* Accents */
-  --brand-primary: #818cf8; /* Soft Indigo */
-  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
-  --brand-hover: rgba(99, 102, 241, 0.8);
+  --brand-primary: #6366f1;
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --brand-hover: #4f46e5;
 
-  --success: #34d399;
-  --success-gradient: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+  --success: #10b981;
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #059669 100%);
 
   /* Spacing */
   --space-sm: 8px;
@@ -29,7 +30,7 @@
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
-  --radius-xl: 32px;
+  --radius-xl: 50px; /* More rounded for modern feel */
 }
 
 * {
@@ -45,9 +46,52 @@ html {
 
 body {
   font-family: var(--font-family);
-  /* background: url("background.jpg") no-repeat center center fixed; -- Removed for Video */
-  /* background-size: cover; */
-  background: #0f172a; /* Fallback color */
+  /* Premium Aurora Background */
+  background-color: #030014;
+  background-image: radial-gradient(
+      circle at 15% 50%,
+      rgba(99, 102, 241, 0.25),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 85% 30%,
+      rgba(139, 92, 246, 0.25),
+      transparent 25%
+    ),
+    radial-gradient(
+      circle at 50% 90%,
+      rgba(16, 185, 129, 0.15),
+      transparent 40%
+    );
+  background-attachment: fixed;
+  background-size: 100% 100%; /* Radial gradients don't animate well with position alone if size is huge, let's use a pseudo element or safer huge gradient logic. */
+  /* Actually the best "Aurora" CSS usually involves filtering or huge moving blobs.
+     Let's try a safer animated gradient mesh approach that is performant.
+  */
+  background: radial-gradient(
+      circle at 0% 0%,
+      rgba(58, 29, 92, 0.6) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 100% 0%,
+      rgba(30, 27, 75, 0.6) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 100% 100%,
+      rgba(49, 46, 129, 0.6) 0%,
+      transparent 50%
+    ),
+    radial-gradient(
+      circle at 0% 100%,
+      rgba(17, 24, 39, 0.6) 0%,
+      transparent 50%
+    ),
+    linear-gradient(135deg, #0f0c29 0%, #000000 100%);
+  background-size: 200% 200%;
+  animation: aurora 20s ease infinite;
+
   color: var(--text-primary);
   line-height: 1.6;
   height: 100vh; /* Fixed height */
@@ -58,18 +102,19 @@ body {
   flex-direction: column;
 }
 
-/* Video Background */
-.bg-video {
-  position: fixed;
-  right: 0;
-  bottom: 0;
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  z-index: -1;
-  object-fit: cover;
+@keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
 }
+
+/* Video Background Removed */
 
 .container {
   max-width: 900px;
@@ -81,7 +126,7 @@ body {
 
   /* Custom Scrollbar for Container */
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
 }
 
 /* Custom Scrollbar Styling (Webkit) */
@@ -94,14 +139,14 @@ body {
 }
 
 .container::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(0, 0, 0, 0.1);
   border-radius: 10px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
   backdrop-filter: blur(4px);
 }
 
 .container::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.4);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 /* Header */
@@ -112,15 +157,15 @@ header {
 }
 
 header h1 {
-  font-size: 56px;
+  font-size: 64px;
   font-weight: 800;
-  letter-spacing: -0.03em;
-  background: linear-gradient(to right, #fff, #c7d2fe);
+  letter-spacing: -0.04em;
+  background: linear-gradient(to right, #ffffff 20%, #a5b4fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 12px;
-  text-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  margin-bottom: 8px;
+  filter: drop-shadow(0 0 20px rgba(99, 102, 241, 0.3));
 }
 
 .subtitle {
@@ -136,18 +181,46 @@ header h1 {
   backdrop-filter: var(--glass-blur);
   -webkit-backdrop-filter: var(--glass-blur);
   border: 1px solid var(--glass-border);
-  border-radius: var(--radius-xl);
+  border-radius: 24px;
   padding: 40px;
   margin-bottom: 32px;
   box-shadow: var(--glass-shadow);
-  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  animation: fadeUp 0.6s ease-out forwards;
+  position: relative;
+  overflow: hidden;
+}
+
+.section-panel::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
 }
 
 .section-panel:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 16px 48px 0 rgba(0, 0, 0, 0.4);
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-4px) scale(1.01);
+  box-shadow: 0 20px 48px 0 rgba(0, 0, 0, 0.6);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .section-header {
@@ -197,28 +270,28 @@ input[type="number"],
 input[type="file"],
 textarea {
   width: 100%;
-  padding: 16px;
+  padding: 16px 20px;
   font-size: 16px;
   line-height: 1.5;
-  color: #fff;
-  background: rgba(0, 0, 0, 0.2);
+  color: var(--text-primary);
+  background: rgba(0, 0, 0, 0.3);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
   font-family: inherit;
 }
 
 input::placeholder,
 textarea::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.3);
 }
 
 input:focus,
 textarea:focus {
   outline: none;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(0, 0, 0, 0.5);
   border-color: var(--brand-primary);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.25);
 }
 
 textarea {
@@ -228,25 +301,28 @@ textarea {
 
 /* File Input */
 input[type="file"] {
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.2);
+  padding: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  cursor: pointer;
 }
 
 input[type="file"]::file-selector-button {
-  margin-right: 16px;
-  padding: 8px 16px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: var(--radius-sm);
-  font-size: 13px;
+  margin-right: 20px;
+  padding: 10px 20px;
+  border: none;
+  background: var(--brand-gradient);
+  border-radius: 50px;
+  font-size: 14px;
   font-weight: 600;
-  color: #fff;
+  color: white;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: transform 0.2s;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
 }
 
 input[type="file"]::file-selector-button:hover {
-  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+  background: var(--brand-gradient);
 }
 
 /* Buttons */
@@ -254,14 +330,17 @@ input[type="file"]::file-selector-button:hover {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 12px 24px;
+  padding: 14px 32px;
   font-size: 15px;
   font-weight: 600;
-  border-radius: var(--radius-lg);
+  border-radius: 50px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border: none;
-  letter-spacing: 0.01em;
+  border: 1px solid transparent;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  position: relative;
+  overflow: hidden;
 }
 
 .btn.primary {
@@ -289,15 +368,15 @@ input[type="file"]::file-selector-button:hover {
 }
 
 .btn.secondary {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: 1px solid var(--glass-border);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-primary);
+  border-color: var(--glass-border);
 }
 
 .btn.secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.1);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 20px rgba(99, 102, 241, 0.2);
 }
 
 .btn:disabled {
@@ -318,8 +397,8 @@ input[type="file"]::file-selector-button:hover {
 
 /* Badge */
 .badge {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
+  background: rgba(99, 102, 241, 0.1);
+  color: var(--brand-primary);
   padding: 6px 12px;
   border-radius: 20px;
   font-size: 12px;
@@ -354,12 +433,12 @@ input[type="file"]::file-selector-button:hover {
 .line-items-wrapper {
   border: 1px solid var(--glass-border) !important;
   border-radius: var(--radius-md) !important;
-  background: rgba(0, 0, 0, 0.2);
+  background: rgba(255, 255, 255, 0.4);
   overflow: hidden;
 }
 
 .line-items-header {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.5);
   border-bottom: 1px solid var(--glass-border);
   color: var(--text-secondary);
   font-weight: 700;
